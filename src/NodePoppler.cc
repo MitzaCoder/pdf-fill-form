@@ -429,6 +429,7 @@ NAN_METHOD(ReadSync) {
         Nan::Set(obj, Nan::New<String>("value").ToLocalChecked(), Nan::Undefined());
         Poppler::FormFieldButton *myButton;
         Poppler::FormFieldChoice *myChoice;
+        Poppler::FormFieldSignature *mySignature;
 
         Nan::Set(obj, Nan::New<String>("id").ToLocalChecked(), Nan::New<Number>(field->id()));
         switch (field->type()) {
@@ -474,7 +475,16 @@ NAN_METHOD(ReadSync) {
           }
 
           // FormSignature
-          case Poppler::FormField::FormSignature:         fieldType = "formsignature";  break;
+          case Poppler::FormField::FormSignature: {
+            Local<Object> jsSignatureInfo = Nan::New<Object>();
+            fieldType = "formsignature";
+            mySignature = (Poppler::FormFieldSignature *)field;
+            Poppler::SignatureValidationInfo signatureInfo = mySignature->validate(Poppler::FormFieldSignature::ValidateOptions::ValidateVerifyCertificate);
+            std::string signature = signatureInfo.signature().toStdString();
+            Nan::Set(jsSignatureInfo, Nan::New<String>("rawSignature").ToLocalChecked(), Nan::New<String>(signature).ToLocalChecked());
+            Nan::Set(obj, Nan::New<String>("value").ToLocalChecked(), jsSignatureInfo);
+            break;
+          }
 
           default:
             fieldType = "undefined";
