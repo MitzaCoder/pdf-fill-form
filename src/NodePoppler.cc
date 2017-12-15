@@ -459,13 +459,20 @@ NAN_METHOD(ReadSync) {
 
           // FormChoice
           case Poppler::FormField::FormChoice: {
-            Local<Array> choiceArray = Nan::New<Array>();
+            Local<Array> possibleChoicesArray = Nan::New<Array>();
+            Local<Array> currentChoicesArray = Nan::New<Array>();
             myChoice = (Poppler::FormFieldChoice *)field;
             QStringList possibleChoices = myChoice->choices();
             for (int i = 0; i < possibleChoices.size(); i++) {
-              Nan::Set(choiceArray, i, Nan::New<String>(possibleChoices.at(i).toStdString()).ToLocalChecked());
+              Nan::Set(possibleChoicesArray, i, Nan::New<String>(possibleChoices.at(i).toStdString()).ToLocalChecked());
             }
-            Nan::Set(obj, Nan::New<String>("choices").ToLocalChecked(), choiceArray);
+            Nan::Set(obj, Nan::New<String>("choices").ToLocalChecked(), possibleChoicesArray);
+
+            QList<int> currentChoices = myChoice->currentChoices();
+            for (int i = 0; i < currentChoices.size(); i++) {
+              Nan::Set(currentChoicesArray, i, Nan::New<Number>(currentChoices.at(i)));
+            }
+            Nan::Set(obj, Nan::New<String>("value").ToLocalChecked(), currentChoicesArray);
             switch (myChoice->choiceType()) {
               case Poppler::FormFieldChoice::ComboBox:    fieldType = "combobox";       break;
               case Poppler::FormFieldChoice::ListBox:     fieldType = "listbox";        break;
