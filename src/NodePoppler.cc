@@ -5,6 +5,7 @@
 #include <map>
 #include <stdlib.h>
 #include <stdio.h>
+#include <time.h>
 
 #include <poppler/qt5/poppler-form.h>
 #include <poppler/qt5/poppler-qt5.h>
@@ -515,6 +516,9 @@ NAN_METHOD(ReadSync) {
 
             std::string signatureStatus = signatureStatusMap[signatureInfo.signatureStatus()];
             Nan::Set(jsSignatureInfo, Nan::New<String>("signatureStatus").ToLocalChecked(), Nan::New<String>(signatureStatus).ToLocalChecked());
+
+            time_t signingTime = signatureInfo.signingTime();
+            Nan::Set(jsSignatureInfo, Nan::New<String>("signingTime").ToLocalChecked(), Nan::New<Number>(signingTime));
 
             Nan::Set(obj, Nan::New<String>("value").ToLocalChecked(), jsSignatureInfo);
             break;
