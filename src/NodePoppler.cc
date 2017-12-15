@@ -481,11 +481,24 @@ NAN_METHOD(ReadSync) {
             mySignature = (Poppler::FormFieldSignature *)field;
             Poppler::SignatureValidationInfo signatureInfo = mySignature->validate(Poppler::FormFieldSignature::ValidateOptions::ValidateVerifyCertificate);
 
+            // Signature certificate status map
+            std::map<Poppler::SignatureValidationInfo::CertificateStatus, std::string> certificateStatusMap;
+            certificateStatusMap[Poppler::SignatureValidationInfo::CertificateStatus::CertificateTrusted] = std::string("CertificateTrusted");
+            certificateStatusMap[Poppler::SignatureValidationInfo::CertificateStatus::CertificateUntrustedIssuer] = std::string("CertificateUntrustedIssuer");
+            certificateStatusMap[Poppler::SignatureValidationInfo::CertificateStatus::CertificateUnknownIssuer] = std::string("CertificateUnknownIssuer");
+            certificateStatusMap[Poppler::SignatureValidationInfo::CertificateStatus::CertificateRevoked] = std::string("CertificateRevoked");
+            certificateStatusMap[Poppler::SignatureValidationInfo::CertificateStatus::CertificateExpired] = std::string("CertificateExpired");
+            certificateStatusMap[Poppler::SignatureValidationInfo::CertificateStatus::CertificateGenericError] = std::string("CertificateGenericError");
+            certificateStatusMap[Poppler::SignatureValidationInfo::CertificateStatus::CertificateNotVerified] = std::string("CertificateNotVerified");
+
             std::string signature = signatureInfo.signature().toBase64().toStdString();
             Nan::Set(jsSignatureInfo, Nan::New<String>("rawSignature").ToLocalChecked(), Nan::New<String>(signature).ToLocalChecked());
 
             std::string signerInfo = signatureInfo.signerSubjectDN().toStdString();
             Nan::Set(jsSignatureInfo, Nan::New<String>("signerInfo").ToLocalChecked(), Nan::New<String>(signerInfo).ToLocalChecked());
+
+            std::string certificateStatus = certificateStatusMap[signatureInfo.certificateStatus()];
+            Nan::Set(jsSignatureInfo, Nan::New<String>("certificateStatus").ToLocalChecked(), Nan::New<String>(certificateStatus).ToLocalChecked());
 
             Nan::Set(obj, Nan::New<String>("value").ToLocalChecked(), jsSignatureInfo);            
             break;
