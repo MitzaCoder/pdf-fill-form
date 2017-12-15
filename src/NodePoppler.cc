@@ -5,6 +5,7 @@
 #include <map>
 #include <stdlib.h>
 #include <stdio.h>
+#include <time.h>
 
 #include <poppler/qt5/poppler-form.h>
 #include <poppler/qt5/poppler-qt5.h>
@@ -429,6 +430,7 @@ NAN_METHOD(ReadSync) {
         Nan::Set(obj, Nan::New<String>("value").ToLocalChecked(), Nan::Undefined());
         Poppler::FormFieldButton *myButton;
         Poppler::FormFieldChoice *myChoice;
+        Poppler::FormFieldSignature *mySignature;
 
         Nan::Set(obj, Nan::New<String>("id").ToLocalChecked(), Nan::New<Number>(field->id()));
         switch (field->type()) {
@@ -481,7 +483,53 @@ NAN_METHOD(ReadSync) {
           }
 
           // FormSignature
-          case Poppler::FormField::FormSignature:         fieldType = "formsignature";  break;
+          case Poppler::FormField::FormSignature: {
+            Local<Object> jsSignatureInfo = Nan::New<Object>();
+            fieldType = "formsignature";
+            mySignature = (Poppler::FormFieldSignature *)field;
+            Poppler::SignatureValidationInfo signatureInfo = mySignature->validate(Poppler::FormFieldSignature::ValidateOptions::ValidateVerifyCertificate);
+
+            // Signature certificate status map
+            std::map<Poppler::SignatureValidationInfo::CertificateStatus, std::string> certificateStatusMap;
+            certificateStatusMap[Poppler::SignatureValidationInfo::CertificateStatus::CertificateTrusted] = std::string("CertificateTrusted");
+            certificateStatusMap[Poppler::SignatureValidationInfo::CertificateStatus::CertificateUntrustedIssuer] = std::string("CertificateUntrustedIssuer");
+            certificateStatusMap[Poppler::SignatureValidationInfo::CertificateStatus::CertificateUnknownIssuer] = std::string("CertificateUnknownIssuer");
+            certificateStatusMap[Poppler::SignatureValidationInfo::CertificateStatus::CertificateRevoked] = std::string("CertificateRevoked");
+            certificateStatusMap[Poppler::SignatureValidationInfo::CertificateStatus::CertificateExpired] = std::string("CertificateExpired");
+            certificateStatusMap[Poppler::SignatureValidationInfo::CertificateStatus::CertificateGenericError] = std::string("CertificateGenericError");
+            certificateStatusMap[Poppler::SignatureValidationInfo::CertificateStatus::CertificateNotVerified] = std::string("CertificateNotVerified");
+
+            // Signature validation status map
+            std::map<Poppler::SignatureValidationInfo::SignatureStatus, std::string> signatureStatusMap;
+            signatureStatusMap[Poppler::SignatureValidationInfo::SignatureStatus::SignatureValid] = std::string("SignatureValid");
+            signatureStatusMap[Poppler::SignatureValidationInfo::SignatureStatus::SignatureInvalid] = std::string("SignatureInvalid");
+            signatureStatusMap[Poppler::SignatureValidationInfo::SignatureStatus::SignatureDigestMismatch] = std::string("SignatureDigestMismatch");
+            signatureStatusMap[Poppler::SignatureValidationInfo::SignatureStatus::SignatureDecodingError] = std::string("SignatureDecodingError");
+            signatureStatusMap[Poppler::SignatureValidationInfo::SignatureStatus::SignatureGenericError] = std::string("SignatureGenericError");
+            signatureStatusMap[Poppler::SignatureValidationInfo::SignatureStatus::SignatureNotFound] = std::string("SignatureNotFound");
+            signatureStatusMap[Poppler::SignatureValidationInfo::SignatureStatus::SignatureNotVerified] = std::string("SignatureNotVerified");
+
+            std::string signature = signatureInfo.signature().toBase64().toStdString();
+            Nan::Set(jsSignatureInfo, Nan::New<String>("rawSignature").ToLocalChecked(), Nan::New<String>(signature).ToLocalChecked());
+
+            std::string signerInfo = signatureInfo.signerSubjectDN().toStdString();
+            Nan::Set(jsSignatureInfo, Nan::New<String>("signerInfo").ToLocalChecked(), Nan::New<String>(signerInfo).ToLocalChecked());
+
+            std::string signerName = signatureInfo.signerName().toStdString();
+            Nan::Set(jsSignatureInfo, Nan::New<String>("signerName").ToLocalChecked(), Nan::New<String>(signerName).ToLocalChecked());
+
+            std::string certificateStatus = certificateStatusMap[signatureInfo.certificateStatus()];
+            Nan::Set(jsSignatureInfo, Nan::New<String>("certificateStatus").ToLocalChecked(), Nan::New<String>(certificateStatus).ToLocalChecked());
+
+            std::string signatureStatus = signatureStatusMap[signatureInfo.signatureStatus()];
+            Nan::Set(jsSignatureInfo, Nan::New<String>("signatureStatus").ToLocalChecked(), Nan::New<String>(signatureStatus).ToLocalChecked());
+
+            time_t signingTime = signatureInfo.signingTime();
+            Nan::Set(jsSignatureInfo, Nan::New<String>("signingTime").ToLocalChecked(), Nan::New<Number>(signingTime));
+
+            Nan::Set(obj, Nan::New<String>("value").ToLocalChecked(), jsSignatureInfo);
+            break;
+          }
 
           default:
             fieldType = "undefined";
