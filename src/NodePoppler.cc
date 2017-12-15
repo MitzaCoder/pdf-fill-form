@@ -491,6 +491,16 @@ NAN_METHOD(ReadSync) {
             certificateStatusMap[Poppler::SignatureValidationInfo::CertificateStatus::CertificateGenericError] = std::string("CertificateGenericError");
             certificateStatusMap[Poppler::SignatureValidationInfo::CertificateStatus::CertificateNotVerified] = std::string("CertificateNotVerified");
 
+            // Signature validation status map
+            std::map<Poppler::SignatureValidationInfo::SignatureStatus, std::string> signatureStatusMap;
+            signatureStatusMap[Poppler::SignatureValidationInfo::SignatureStatus::SignatureValid] = std::string("SignatureValid");
+            signatureStatusMap[Poppler::SignatureValidationInfo::SignatureStatus::SignatureInvalid] = std::string("SignatureInvalid");
+            signatureStatusMap[Poppler::SignatureValidationInfo::SignatureStatus::SignatureDigestMismatch] = std::string("SignatureDigestMismatch");
+            signatureStatusMap[Poppler::SignatureValidationInfo::SignatureStatus::SignatureDecodingError] = std::string("SignatureDecodingError");
+            signatureStatusMap[Poppler::SignatureValidationInfo::SignatureStatus::SignatureGenericError] = std::string("SignatureGenericError");
+            signatureStatusMap[Poppler::SignatureValidationInfo::SignatureStatus::SignatureNotFound] = std::string("SignatureNotFound");
+            signatureStatusMap[Poppler::SignatureValidationInfo::SignatureStatus::SignatureNotVerified] = std::string("SignatureNotVerified");
+
             std::string signature = signatureInfo.signature().toBase64().toStdString();
             Nan::Set(jsSignatureInfo, Nan::New<String>("rawSignature").ToLocalChecked(), Nan::New<String>(signature).ToLocalChecked());
 
@@ -499,6 +509,9 @@ NAN_METHOD(ReadSync) {
 
             std::string certificateStatus = certificateStatusMap[signatureInfo.certificateStatus()];
             Nan::Set(jsSignatureInfo, Nan::New<String>("certificateStatus").ToLocalChecked(), Nan::New<String>(certificateStatus).ToLocalChecked());
+
+            std::string signatureStatus = signatureStatusMap[signatureInfo.signatureStatus()];
+            Nan::Set(jsSignatureInfo, Nan::New<String>("signatureStatus").ToLocalChecked(), Nan::New<String>(signatureStatus).ToLocalChecked());
 
             Nan::Set(obj, Nan::New<String>("value").ToLocalChecked(), jsSignatureInfo);            
             break;
