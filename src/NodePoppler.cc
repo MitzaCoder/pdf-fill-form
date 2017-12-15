@@ -480,7 +480,8 @@ NAN_METHOD(ReadSync) {
             fieldType = "formsignature";
             mySignature = (Poppler::FormFieldSignature *)field;
             Poppler::SignatureValidationInfo signatureInfo = mySignature->validate(Poppler::FormFieldSignature::ValidateOptions::ValidateVerifyCertificate);
-            std::string signature = signatureInfo.signature().toStdString();
+
+            std::string signature = signatureInfo.signature().toBase64().toStdString();
             Nan::Set(jsSignatureInfo, Nan::New<String>("rawSignature").ToLocalChecked(), Nan::New<String>(signature).ToLocalChecked());
             Nan::Set(obj, Nan::New<String>("value").ToLocalChecked(), jsSignatureInfo);
             break;
