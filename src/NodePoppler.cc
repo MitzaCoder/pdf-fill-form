@@ -507,13 +507,16 @@ NAN_METHOD(ReadSync) {
             std::string signerInfo = signatureInfo.signerSubjectDN().toStdString();
             Nan::Set(jsSignatureInfo, Nan::New<String>("signerInfo").ToLocalChecked(), Nan::New<String>(signerInfo).ToLocalChecked());
 
+            std::string signerName = signatureInfo.signerName().toStdString();
+            Nan::Set(jsSignatureInfo, Nan::New<String>("signerName").ToLocalChecked(), Nan::New<String>(signerName).ToLocalChecked());
+
             std::string certificateStatus = certificateStatusMap[signatureInfo.certificateStatus()];
             Nan::Set(jsSignatureInfo, Nan::New<String>("certificateStatus").ToLocalChecked(), Nan::New<String>(certificateStatus).ToLocalChecked());
 
             std::string signatureStatus = signatureStatusMap[signatureInfo.signatureStatus()];
             Nan::Set(jsSignatureInfo, Nan::New<String>("signatureStatus").ToLocalChecked(), Nan::New<String>(signatureStatus).ToLocalChecked());
 
-            Nan::Set(obj, Nan::New<String>("value").ToLocalChecked(), jsSignatureInfo);            
+            Nan::Set(obj, Nan::New<String>("value").ToLocalChecked(), jsSignatureInfo);
             break;
           }
 
